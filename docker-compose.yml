@@ -1,0 +1,33 @@
+services:
+  postgres-svc:
+    container_name: postgres_container
+    image: postgres:16.6
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - reservation-network
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  pgAdmin:
+    depends_on:
+      - postgres-svc
+    image: dpage/pgadmin4:8.13.0
+    user: "5050:5050"
+    ports:
+      - "8082:80"
+    volumes:
+      - pgadmin-vol:/var/lib/pgadmin
+    networks:
+      - reservation-network
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+
+networks:
+  reservation-network: { }
+
+volumes:
+  pgadmin-vol: { }

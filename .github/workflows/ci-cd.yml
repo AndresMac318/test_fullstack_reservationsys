@@ -1,0 +1,74 @@
+name: CI/CD for Reservationsys
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: reservationsys
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build and run tests
+        run: mvn clean verify -DskipTests
+
+  versioning:
+    name: Bump Version & Generate Changelog
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Generate new version
+        id: version
+        uses: paulhatch/semantic-version@v5.3.0
+        with:
+          tag_prefix: "v"
+
+      - name: Generate Changelog
+        run: |
+          echo "## Changelog" > CHANGELOG.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> CHANGELOG.md
+          cat CHANGELOG.md
+
+      - name: Commit & Tag Version
+        run: |
+          git add CHANGELOG.md
+          git commit -m "Bump version to ${{ steps.version.outputs.version }}"
+          git tag -a v${{ steps.version.outputs.version }} -m "Version ${{ steps.version.outputs.version }}"
+          git push origin main --tags
+
+  deploy:
+    name: Simulated Deployment
+    needs: versioning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Simulate Deployment
+        run: echo "Simulating deployment of version ${{ steps.version.outputs.version }}..."
