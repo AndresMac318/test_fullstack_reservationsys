@@ -65,8 +65,7 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Bump version to ${{ steps.version.outputs.version }}"
           git tag -a v${{ steps.version.outputs.version }} -m "Version ${{ steps.version.outputs.version }}"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main --tags
-
+          git push https://github-actions[bot]:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main --tags
 
   deploy:
     name: Simulated Deployment
