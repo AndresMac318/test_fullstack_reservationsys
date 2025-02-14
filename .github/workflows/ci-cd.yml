@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v3
@@ -39,6 +41,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -54,7 +57,7 @@ jobs:
       - name: Generate Changelog
         run: |
           echo "## Changelog" > CHANGELOG.md
-          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> CHANGELOG.md
+          (git describe --tags --abbrev=0 && git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD) >> CHANGELOG.md || echo "- Initial release" >> CHANGELOG.md
           cat CHANGELOG.md
 
       - name: Commit & Tag Version
@@ -62,7 +65,8 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Bump version to ${{ steps.version.outputs.version }}"
           git tag -a v${{ steps.version.outputs.version }} -m "Version ${{ steps.version.outputs.version }}"
-          git push origin main --tags
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main --tags
+
 
   deploy:
     name: Simulated Deployment
